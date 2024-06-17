@@ -13,11 +13,11 @@ vpath %.o $(OBJS_DIR)
 
 PROJECT_NAME = stm32_blink
 CC = arm-none-eabi-
-CFLAGS = -mcpu=cortex-m3 -g -O0 -DSTM32F103xB 
+CFLAGS = -mcpu=cortex-m3 -g -O0 -DSTM32F103xB -mthumb
 SRC := $(wildcard *.c) $(wildcard $(SRC_DIR)/*.c) 
 OBJ := $(addprefix $(OBJS_DIR)/, $(notdir $(SRC:.c=.o)) stm32f1xx_hal.o stm32f1xx_hal_cortex.o stm32f1xx_hal_rcc.o stm32f1xx_hal_gpio.o) 
 As = $(wildcard *.s)
-AsOBJ = $(As:.s=.o)
+AsOBJ = $(OBJS_DIR)/$(As:.s=.o)
 
 .PHONY: flash
 flash: build
@@ -30,10 +30,10 @@ $(OBJS_DIR)/%.o: %.c
 	$(CC)gcc $< -c $(INCS)  -o $@   $(CFLAGS)
 
 $(OBJS_DIR)/%.o: %.s
-	$(CC)as $< -o $@ $(CFLAGS)
+	$(CC)gcc -c $< -o $@ $(CFLAGS)
 
 $(PROJECT_NAME).elf: $(OBJ) $(AsOBJ)
-	$(CC)ld -T linker_script.ld $(AsOBJ) $(OBJ) -o $@ -Map="map_file.map"
+	$(CC)gcc -T STM32F103.ld $(AsOBJ) $(OBJ) -o $@ $(CFLAGS)
 
 $(PROJECT_NAME).bin: $(PROJECT_NAME).elf
 	$(CC)objcopy -O binary $< $@
